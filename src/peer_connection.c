@@ -470,7 +470,7 @@ int peer_connection_loop(PeerConnection* pc) {
       }
 #endif
 
-      if ((pc->agent_ret = agent_recv(&pc->agent, pc->agent_buf, sizeof(pc->agent_buf))) > 0) {
+      while ((pc->agent_ret = agent_recv(&pc->agent, pc->agent_buf, sizeof(pc->agent_buf))) > 0) {
         LOGD("agent_recv %d", pc->agent_ret);
 
         if (rtcp_probe(pc->agent_buf, pc->agent_ret)) {
@@ -484,6 +484,7 @@ int peer_connection_loop(PeerConnection* pc) {
 
           if (ret > 0) {
             sctp_incoming_data(&pc->sctp, (char*)pc->temp_buf, ret);
+            continue;
           }
 
         } else if (rtp_packet_validate(pc->agent_buf, pc->agent_ret)) {
@@ -501,6 +502,7 @@ int peer_connection_loop(PeerConnection* pc) {
         } else {
           LOGW("Unknown data");
         }
+        break;
       }
 
       if (KEEPALIVE_CONNCHECK > 0 && (ports_get_epoch_time() - pc->agent.binding_request_time) > KEEPALIVE_CONNCHECK) {
@@ -653,3 +655,4 @@ int peer_connection_add_ice_candidate(PeerConnection* pc, char* candidate) {
   agent->remote_candidates_count++;
   return 0;
 }
+
